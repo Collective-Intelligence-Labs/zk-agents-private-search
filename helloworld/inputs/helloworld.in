@@ -1,5 +1,5 @@
 // The program input for helloworld/src/main.leo
-[register]
+[main]
 public x: u32 = 1u32;
 public y: u32 = 2u32;
-sender: aleo1mck6ecru0t67gm7wvq6a27dqrdw9j0hnch624cpzkjeesanjjv8qyvvztu
+public sender: "aleo1mck6ecru0t67gm7wvq6a27dqrdw9j0hnch624cpzkjeesanjjv8qyvvztu";
