@@ -2,6 +2,12 @@
 program helloworld.aleo {
 
 
+
+    record State {
+        agents: [Agent; 32],
+        owner: address
+    }
+
     struct Identity {
         x: u32
         y: u32
@@ -19,7 +25,7 @@ program helloworld.aleo {
 
     mapping agents: address => Agent;
 
-    transition register(public x: u32, public y: u32, sender: address) -> AgentRegistered {
+    transition register(state: State, public x: u32, public y: u32, sender: address) -> (State, AgentRegistered) {
         let e: AgentRegistered = AgentRegistered {
             identity: Identity {
                 x: x,
@@ -27,7 +33,7 @@ program helloworld.aleo {
             },
             owner: sender
         };
-        return e then finalize(x,y,sender);
+        return (state, e) then finalize(x,y,sender);
     }
 
     finalize register(public x: u32, public y: u32, sender: address){
@@ -53,8 +59,8 @@ program helloworld.aleo {
         radius: u32,
         owner: address,
     }
-
-    // Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
+    
+    //Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
     transition send_signal(radius: u32, sender: address, signal: u32 ) -> SignalSent{
         let e: SignalSent = SignalSent {
             signal: signal,
@@ -79,23 +85,19 @@ program helloworld.aleo {
         reader: address,
     }
 
+
     //Allows to read signal if the sender is within the radius of the signal
-    transition read_signal(signal: u32, sender: address) -> SignalRead {
-        let s: Signal = Mapping::get(signals, signal);
-        let a: Agent = Mapping::get(agents, sender);
-        if (s.sender == sender) {
-            return;
-        }
-        if (s.radius >= (a.identity.x - s.signal) && s.radius >= (a.identity.y - s.signal)) {
-            return SignalRead {
-                signal: s.signal,
-                radius: s.radius,
-                owner: s.sender,
-                reader: sender
-            };
-        }
-        return;
+    transition read_signal(s: State, signal: u32, sender: address) -> (State, SignalRead) {
+        let e: SignalRead = SignalRead {
+            signal: signal,
+            radius: s.radius,
+            owner: s.owner,
+            reader: sender
+        };
+        return (s, e) then finalize(signal, sender);
     }
 
-  
+    finalize read_signal(signal: u32, sender: address){
+        Mapping::remove(signals, signal);
+    }
 }
