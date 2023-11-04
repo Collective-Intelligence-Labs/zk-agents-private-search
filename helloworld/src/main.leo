@@ -4,8 +4,11 @@ program helloworld.aleo {
 
 
     record State {
-        agents: [Agent; 32],
+        agents_x: [u32; 32],
+        agents_y: [u32; 32],
+        agents_address: [address; 32],
         owner: address
+        counter: u32
     }
 
     struct Identity {
@@ -25,6 +28,38 @@ program helloworld.aleo {
 
     mapping agents: address => Agent;
 
+    // Returns a new board_state.
+    transition new_map_state(
+    ) -> State {
+        let default_array: [u32; 32] = [0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32];
+        let a:address = aleo1ezamst4pjgj9zfxqq0fwfj8a4cjuqndmasgata3hggzqygggnyfq6kmyd4;
+        let default_addrs: [address; 32] = [a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a];
+        return State {
+            agents_x: default_array,
+            agents_y: default_array,
+            agents_address: default_addrs,
+            owner: self.signer,
+            counter: 0u32
+        };
+    }
+
+    function update_state(s: State, x: u32, y: u32, sender: address) -> State {
+        let agents_x:[u32; 32] = s.agents_x;
+        let agents_y:[u32; 32] = s.agents_y;
+        let agents_addresses:[address; 32] = s.agents_address;
+        let new_counter:u32 = s.counter + 1u32;
+        agents_x[s.counter] = x;
+        agents_y[s.counter] = y;
+        agents_addresses[s.counter] = sender;
+
+        return State {
+            agents_x: agents_x,
+            agents_y: agents_y,
+            agents_address: agents_addresses,
+            owner: self.signer,
+            counter: 0u32
+        };
+    }
     transition register(state: State, public x: u32, public y: u32, sender: address) -> (State, AgentRegistered) {
         let e: AgentRegistered = AgentRegistered {
             identity: Identity {
@@ -33,17 +68,8 @@ program helloworld.aleo {
             },
             owner: sender
         };
-        return (state, e) then finalize(x,y,sender);
-    }
-
-    finalize register(public x: u32, public y: u32, sender: address){
-        Mapping::set(agents, sender, Agent {
-            identity: Identity {
-                x: x,
-                y: y
-            },
-            addr: sender
-        });
+        let new_state:State = update_state(state, x, y, sender);
+        return (new_state, e);
     }
 
     struct Signal {
