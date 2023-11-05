@@ -10,12 +10,19 @@ import {
 import { expose, proxy } from "comlink";
 
 await initThreadPool();
+let privateKey = null;
+
+let account = null;
+
+async function setPrivateKey(key) {
+  privateKey = key;
+ 
+}
 
 async function localProgramExecution(program, aleoFunction, inputs) {
   const programManager = new ProgramManager();
 
-  // Create a temporary account for the execution of the program
-  const account = new Account();
+  account = new Account()
   programManager.setAccount(account);
 
   const executionResponse = await programManager.executeOffline(
@@ -27,7 +34,9 @@ async function localProgramExecution(program, aleoFunction, inputs) {
   return executionResponse.getOutputs();
 }
 
-async function getPrivateKey() {
+
+
+async function createPrivateKey() {
   const key = new PrivateKey();
   return proxy(key);
 }
@@ -41,7 +50,7 @@ async function deployProgram(program) {
 
   // Use existing account with funds
   const account = new Account({
-    privateKey: "user1PrivateKey",
+    privateKey: privateKey,
   });
 
   const recordProvider = new NetworkRecordProvider(account, networkClient);
@@ -68,5 +77,5 @@ async function deployProgram(program) {
   return tx_id;
 }
 
-const workerMethods = { localProgramExecution, getPrivateKey, deployProgram };
+const workerMethods = { localProgramExecution, createPrivateKey, deployProgram };
 expose(workerMethods);

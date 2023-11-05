@@ -2,26 +2,102 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import aleoLogo from "./assets/aleo.svg";
 import "./App.css";
+import CanvasGrid from "./CanvasGrid";  
+import SignalsTable from "./SignalsTable";
 import helloworld_program from "../helloworld/build/main.aleo?raw";
 import { AleoWorker } from "./workers/AleoWorker.js";
 
+import {
+  Account
+} from "@aleohq/sdk";
+
 const aleoWorker = AleoWorker();
+
+function Agent(x, y, key) {
+  this.x = x;
+  this.y = y;
+  this.key = key;
+  //this.account = Account.fromPrivateKey(key);
+}
+
+function Signal(x, y, radius){
+  this.x = x;
+  this.y = y;
+  this.radius = radius;
+}
+
 function App() {
-  const [count, setCount] = useState(0);
   const [account, setAccount] = useState(null);
   const [executing, setExecuting] = useState(false);
   const [deploying, setDeploying] = useState(false);
+  const [selectedAgentKey, setSelectedAgentKey] = useState('');
+  const [signalRadius, setSignalRadius] = useState('');
+  const [agents, setAgents] = useState([]);
+  const [signals, setSignals] = useState([]);
+  
+  let state = null;
 
-  const generateAccount = async () => {
-    const key = await aleoWorker.getPrivateKey();
-    setAccount(await key.to_string());
+  const generateAgents = async () => {
+    setExecuting(true);
+    const key = await aleoWorker.createPrivateKey();
+
+    const result = await aleoWorker.localProgramExecution(
+      helloworld_program,
+      "init",
+      [],
+    );
+
+    state = result[0]
+
+    /* const res = await aleoWorker.localProgramExecution(
+      helloworld_program,
+      "test_state",
+      [state],
+    ); */
+
+    console.log(state)
+    const agents = [];
+    for (let i = 0; i < 32; i++) {
+      const pk = await aleoWorker.createPrivateKey();
+      console.log(pk)
+      const pks = await pk.to_string()
+      console.log(address)
+      const x = Math.floor(Math.random() * 64);
+      const y = Math.floor(Math.random() * 64);
+      const agent = new Agent(x, y, pks);
+      console.log(agent);
+      agents.push(agent)
+     
+      const res = await aleoWorker.localProgramExecution(
+        helloworld_program,
+        "register",
+        [state , agent.x + "u32", agent.y + "u32", address],
+      );
+      state = res[0]
+    }
+
+    setAgents(agents);
+
+    setExecuting(false);
   };
 
-  async function execute() {
+  const sendSignal = (agent, radius) => {
+
+    //log agent position 
+    console.log("Agent: " + agent + " is at position (" + agent.x + ", " + agent.y + ")")
+
+
+    // Add a new signal to the signals array
+    setSignals(signals => [...signals, { x: agent.x, y: agent.y, radius }]);
+    console.log("Sending signal from agent " + agent + " with radius " + radius)
+    // ... the rest of your send signal logic
+  };
+
+  async function execute(account) {
     setExecuting(true);
     const result = await aleoWorker.localProgramExecution(
       helloworld_program,
-      "main",
+      "send_signal",
       ["5u32", "5u32"],
     );
     setExecuting(false);
@@ -43,59 +119,68 @@ function App() {
     setDeploying(false);
   }
 
-  return (
+
+
+return (
     <>
-      <div>
-        <a href="https://aleo.org" target="_blank">
-          <img src={aleoLogo} className="logo" alt="Aleo logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Aleo + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+      {/* existing UI elements */}
+     
+
+      
+
+      <button onClick={generateAgents}>
+            Generate Accounts
+      </button>
+      <label> Radius: </label>
+      <input
+        type="number"
+        value={signalRadius}
+        onChange={(e) => setSignalRadius(e.target.value)}
+        placeholder="Enter signal radius"
+      />
+
+
+  <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px' }}>
+
+
+      <div>      <CanvasGrid agents={agents} signals={signals} /></div>
+
+    {/* Table of Agents */}
+  <div>
+  {/* Input for signal radius */}
+
+<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+  <thead>
+    <tr>
+      <th style={{ padding: '2px', fontSize: '0.9em' }}>Position</th>
+      <th style={{ padding: '2px', fontSize: '0.9em' }}>Address</th>
+      <th style={{ padding: '2px', fontSize: '0.9em' }}>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {agents.map((agent, index) => (
+      <tr key={agent.key}>
+        <td style={{ padding: '0px', fontSize: '0.8em' }}>({agent.x}, {agent.y})</td>
+        <td style={{ padding: '0px', fontSize: '0.8em' }}>{agent.key}</td>
+        <td style={{ padding: '0px', fontSize: '0.8em', whiteSpace: 'nowrap' }}>
+        <button 
+          onClick={() => sendSignal(agent, signalRadius)}
+          style={{ padding: '0px 0px', fontSize: '0.8em', margin: '0 5px 0 0', display: 'inline-block' }}
+        >
+          Send
         </button>
-        <p>
-          <button onClick={generateAccount}>
-            {account
-              ? `Account is ${JSON.stringify(account)}`
-              : `Click to generate account`}
-          </button>
-        </p>
-        <p>
-          <button disabled={executing} onClick={execute}>
-            {executing
-              ? `Executing...check console for details...`
-              : `Execute helloworldrodrigomoreira.aleo`}
-          </button>
-        </p>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      </td>
+
+      </tr>
+    ))}
+  </tbody>
+</table>
+
       </div>
 
-      {/* Advanced Section */}
-      <div className="card">
-        <h2>Advanced Actions</h2>
-        <p>
-          Deployment on Aleo requires certain prerequisites like seeding your
-          wallet with credits and retrieving a fee record. Check README for more
-          details.
-        </p>
-        <p>
-          <button disabled={deploying} onClick={deploy}>
-            {deploying
-              ? `Deploying...check console for details...`
-              : `Deploy helloworldrodrigomoreira.aleo`}
-          </button>
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Aleo and React logos to learn more
-      </p>
+    </div>
+      <SignalsTable signals={signals} />
+
     </>
   );
 }

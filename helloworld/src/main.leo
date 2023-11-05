@@ -25,6 +25,32 @@ program helloworld.aleo {
         owner: address
     }
 
+    struct GlobalState {
+        index: u128,
+        x: u32,
+        y: u32,
+        distance: u32,
+        hashed_encrypted_signal: u32,
+        reader_public_key: address,
+        
+        reader_x: u32,
+        reader_y: u32,
+
+        hashed_decryption_key: field,
+
+    }
+
+    struct SignalState {
+        signal_encrupted: u32,
+        x: u32,
+        y: u32,
+        distance: u32,
+    }
+
+    mapping signals: field => SignalState;
+
+    mapping globalState: bool => GlobalState;
+
     mapping agents: address => Agent;
 
     // Returns a new board_state.
@@ -37,7 +63,18 @@ program helloworld.aleo {
             agents_y: default_array,
             owner_address: self.signer,
             counter: 0u32
+        } then finalize(0u32);
+    }
+
+    finalize init(counter: u32) {
+        let gs: GlobalState = GlobalState {
+            index: 0u128
         };
+        Mapping::set(globalState, true,gs);
+    }
+
+    transition test_state(public state: GlobalState) {
+        let s: u128= 0u128;
     }
 
     function update_state_register(s: State, x: u32, y: u32, sender: address) -> State {
@@ -63,7 +100,7 @@ program helloworld.aleo {
         let new_state:State = update_state_register(state, x, y, sender);
         return (new_state, e);
     }
-    /*
+
     struct Signal {
         signal: u32,
         radius: u32,
@@ -73,20 +110,41 @@ program helloworld.aleo {
     mapping signals: u32 => Signal;
 
     record SignalSent {
-        signal: u32,
+        signal_hash: u32,
         radius: u32,
         owner: address,
     }
     
     //Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
-    transition send_signal(radius: u32, sender: address, signal: u32 ) -> SignalSent{
+    transition send_signal(public state: GlobalState, agent: AgentRegistered, public distance: u32, public signal_encrypted: u32 ) -> SignalSent{
+        
+        assert_eq(self.caller, agent.owner);
+        assert_eq(state.x, 0u32);
+        assert_eq(state.y, 0u32);
+
+
         let e: SignalSent = SignalSent {
-            signal: signal,
-            radius: radius,
-            owner: sender
+            signal_hash: signal,
+            distance: distance,
+            signal_encrypted: signal_encrypted
         };
-        return e;
+        return e then finalize(agent.identity.x, agent.identity.y, distance, signal_encrypted);
     }
+    
+    finalize  send_signal(agent: AgentRegistered, distance: u32, signal_encrypted: u32){
+        let signal: SignalState = SignalState {
+             signal_encrupted: signal_encrypted,
+             x: agent.x,
+             y: agent.y,
+             distance: distance,
+        };
+
+        let hash: field = BHP256::hash_to_field(signal);
+        Mapping::set(signals, hash, signal);
+    }
+
+    //TODO:
+    //
 
     record SignalRead {
         signal: u32,
@@ -110,5 +168,7 @@ program helloworld.aleo {
     finalize read_signal(signal: u32, sender: address){
         Mapping::remove(signals, signal);
     }
-    */
+
+
+    
 }
