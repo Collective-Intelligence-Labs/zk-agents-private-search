@@ -19,10 +19,12 @@ async function setPrivateKey(key) {
  
 }
 
-async function localProgramExecution(program, aleoFunction, inputs) {
+async function localProgramExecution(program, aleoFunction, inputs, privateKey) {
   const programManager = new ProgramManager();
 
-  account = new Account()
+  account = new Account({
+    privateKey: privateKey
+  });
   programManager.setAccount(account);
 
   const executionResponse = await programManager.executeOffline(

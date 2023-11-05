@@ -32,9 +32,12 @@ program helloworld.aleo {
 
     mapping signals: field => SignalState;
 
-    transition register(public id: Identity) -> AgentRegistered {
+    transition register(x: field, y: field) -> AgentRegistered {
         let e: AgentRegistered = AgentRegistered {
-            identity: id,
+            identity: Identity {
+                x: x,
+                y: y
+            },
             owner: self.caller
         };
         return e;

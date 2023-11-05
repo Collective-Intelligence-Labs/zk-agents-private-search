@@ -17,6 +17,7 @@ function Agent(x, y, key) {
   this.x = x;
   this.y = y;
   this.key = key;
+  this.registration = null;
   //this.account = Account.fromPrivateKey(key);
 }
 
@@ -39,8 +40,8 @@ function App() {
 
   const generateAgents = async () => {
     setExecuting(true);
-    const key = await aleoWorker.createPrivateKey();
 
+    /* 
     const result = await aleoWorker.localProgramExecution(
       helloworld_program,
       "init",
@@ -56,27 +57,28 @@ function App() {
     ); */
 
     console.log(state)
-    const agents = [];
+    const newAgents = [];
     for (let i = 0; i < 32; i++) {
       const pk = await aleoWorker.createPrivateKey();
       console.log(pk)
-      const pks = await pk.to_string()
-      console.log(address)
+      const pks = await pk.to_string();
       const x = Math.floor(Math.random() * 64);
       const y = Math.floor(Math.random() * 64);
       const agent = new Agent(x, y, pks);
       console.log(agent);
-      agents.push(agent)
+      newAgents.push(agent)
 
+      setAgents(newAgents);
       const res = await aleoWorker.localProgramExecution(
         helloworld_program,
         "register",
-        [state, agent.x + "field", agent.y + "field", address],
+        [x + "field", y + "field"],
+        pks
       );
-      state = res[0]
+      agent.registration = res[0]
     }
 
-    setAgents(agents);
+    setAgents(newAgents);
 
     setExecuting(false);
   };
