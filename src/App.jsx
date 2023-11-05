@@ -66,9 +66,7 @@ function App() {
       const y = Math.floor(Math.random() * 64);
       const agent = new Agent(x, y, pks);
       console.log(agent);
-      newAgents.push(agent)
-
-      setAgents(newAgents);
+      
       const res = await aleoWorker.localProgramExecution(
         helloworld_program,
         "register",
@@ -76,6 +74,9 @@ function App() {
         pks
       );
       agent.registration = res[0]
+
+      newAgents.push(agent);
+      setAgents(newAgents);
     }
 
     setAgents(newAgents);
@@ -182,7 +183,11 @@ function App() {
 
       </div>
       <SignalsTable signals={signals} />
+              
 
+      <button onClick={deploy}>
+        Deploy Smart Contract
+      </button>
     </>
   );
 }
