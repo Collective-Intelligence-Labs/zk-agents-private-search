@@ -38,51 +38,42 @@ function App() {
 
   let state = null;
 
-  const generateAgents = async () => {
-    setExecuting(true);
-
-    /* 
-    const result = await aleoWorker.localProgramExecution(
+  const createAgent = async (aleoWorker, helloworld_program) => {
+    const pk = await aleoWorker.createPrivateKey();
+    console.log(pk);
+    const pks = await pk.to_string();
+    const x = Math.floor(Math.random() * 64);
+    const y = Math.floor(Math.random() * 64);
+    const agent = new Agent(x, y, pks);
+    console.log(agent);
+  
+    const res = await aleoWorker.localProgramExecution(
       helloworld_program,
-      "init",
-      [],
+      "register",
+      [x + "field", y + "field"],
+      pks
     );
-
-    state = result[0]
-
-    /* const res = await aleoWorker.localProgramExecution(
-      helloworld_program,
-      "test_state",
-      [state],
-    ); */
-
-    console.log(state)
-    const newAgents = [];
-    for (let i = 0; i < 32; i++) {
-      const pk = await aleoWorker.createPrivateKey();
-      console.log(pk)
-      const pks = await pk.to_string();
-      const x = Math.floor(Math.random() * 64);
-      const y = Math.floor(Math.random() * 64);
-      const agent = new Agent(x, y, pks);
-      console.log(agent);
-      
-      const res = await aleoWorker.localProgramExecution(
-        helloworld_program,
-        "register",
-        [x + "field", y + "field"],
-        pks
-      );
-      agent.registration = res[0]
-
-      newAgents.push(agent);
-      setAgents(newAgents);
-    }
-
-    setAgents(newAgents);
-
-    setExecuting(false);
+    agent.registration = res[0];
+  
+    return agent;
   };
+
+ 
+// Inside your function/component
+const generateAgents = async () => {
+  try {
+    const agentPromises = [];
+    for (let i = 0; i < 4; i++) {
+      agentPromises.push(createAgent(aleoWorker, helloworld_program));
+    }
+    const newAgents = await Promise.all(agentPromises);
+
+    // Now you have all the newAgents created in parallel
+    setAgents(newAgents);
+  } catch (error) {
+    console.error('An error occurred while creating agents:', error);
+  }
+};
 
   const sendSignal = (agent, radius) => {
 

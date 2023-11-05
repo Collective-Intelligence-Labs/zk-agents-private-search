@@ -1,5 +1,5 @@
 // The 'helloworld' program.
-program helloworld.aleo {
+program private_agents.aleo {
 
 
     struct Identity {
