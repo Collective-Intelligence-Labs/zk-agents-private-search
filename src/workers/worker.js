@@ -15,35 +15,38 @@ await initThreadPool();
 
 async function programExecution(program, aleoFunction, inputs, privateKey) {
 
+  console.log("programExecution");  
   const keyProvider = new AleoKeyProvider();
   keyProvider.useCache(true);
 
+  console.log("programExecution AleoKeyProvider");
   // Create a record provider that will be used to find records and transaction data for Aleo programs
   const networkClient = new AleoNetworkClient("https://vm.aleo.org/api");
-
   // Use existing account with funds
   const account = new Account({
-    privateKey: privateKey,
+    privateKey: "APrivateKey1zkpAXoVC8gAr6QYGDmC2G8s6b4BJbjXVfz19gLcyuLU2XK5",
   });
 
+  
+ 
   const recordProvider = new NetworkRecordProvider(account, networkClient);
   const programManager = new ProgramManager(
-    "https://vm.aleo.org/api",
-    keyProvider,
-    recordProvider,
+    "https://vm.aleo.org/api"
   );
-
   programManager.setAccount(account);
-  const s = await programManager.verifyProgram(program);
-  console.log(s);
-  const fee = 5000; // 1.9 Aleo credits
+  console.log("programExecution ProgramManager");
+
+  console.log(inputs)
   const executionResponse = await programManager.execute(
     program,
     aleoFunction,
-    inputs,
-    false
+    1000,
+    false,
+    inputs
   );
-  return executionResponse.getOutputs();
+  console.log("programExecution executionResponse");
+  console.log(executionResponse);
+  return executionResponse;
 }
 
 
@@ -62,6 +65,7 @@ async function localProgramExecution(program, aleoFunction, inputs, privateKey) 
     inputs,
     false,
   );
+  console.log("localProgramExecution executionResponse: " + executionResponse);
   return executionResponse.getOutputs();
 }
 
@@ -106,5 +110,5 @@ async function deployProgram(program) {
   return tx_id;
 }
 
-const workerMethods = { localProgramExecution, createPrivateKey, deployProgram };
+const workerMethods = { localProgramExecution, programExecution, createPrivateKey, deployProgram };
 expose(workerMethods);

@@ -1,5 +1,5 @@
-// The 'helloworld' program.
-program private_agents.aleo {
+
+program private_agents2.aleo {
     struct Identity {
         x: field
         y: field
@@ -58,7 +58,7 @@ program private_agents.aleo {
     //Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
     transition send_signal(agent: AgentRegistered, payload: address, public distance: field, public s: signature, public msg: field) -> SignalSent { 
         // by some reason it started to work in a wrong way
-        //assert_eq(self.caller, agent.owner);
+        assert_eq(self.caller, agent.owner);
         //assert(s.verify(payload, payload));
         let e: SignalSent = SignalSent {
             distance: distance,
@@ -111,10 +111,10 @@ program private_agents.aleo {
             index: index,
         };
         let hash: field = BHP256::hash_to_field(signal);
-        return e; //then finalize(hash, msg, index, receiver);
+        return e then finalize(hash, msg, index, receiver);
     }
 
-    /*
+    
     finalize read_signal(hashS: field, msg: field, index: u32, receiver: address) {
         let response: SignalResponse = SignalResponse {
             signal: hashS,
@@ -127,25 +127,17 @@ program private_agents.aleo {
         Mapping::set(responses, hashR, response);
     }
 
-    /* 
+    
 
     transition reveal_signal(sent: SignalSent, payload: address, receiver: address, read: field, public response: signature, public request: signature) {
         assert_eq(sent.owner, self.caller);
         assert(request.verify(self.caller, payload));
+        return then finalize(read, response, request);
     }
 
-    finalize reveal_signal() {
-        //set reveal to the mapping
-        return;
+    finalize reveal_signal(read: field, response: signature, request: signature) {
+        Mapping::set(reveals, read, read);
     }
-
-    */
-
-    //finalize read_signal(signal: u32, sender: address){
-    //    Mapping::remove(signals, signal);
-    //}
-    
-   
 
 
     

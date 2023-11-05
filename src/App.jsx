@@ -4,11 +4,13 @@ import aleoLogo from "./assets/aleo.svg";
 import "./App.css";
 import CanvasGrid from "./CanvasGrid";
 import SignalsTable from "./SignalsTable";
-import private_agents from "../private_agents/build/main.aleo?raw";
+import private_agents_path from "../private_agents2/build/main.aleo?raw";
 import { AleoWorker } from "./workers/AleoWorker.js";
 import {
   Account, PrivateKey
 } from "@aleohq/sdk";
+
+import { IExecDataProtector } from "@iexec/dataprotector";
 
 
 const aleoWorker = AleoWorker();
@@ -36,21 +38,34 @@ function App() {
   const [agentsToCreate, setAgentsToCreate] = useState('32');
   const [agents, setAgents] = useState([]);
   const [signals, setSignals] = useState([]);
+  const [dataToProtect, setDataToProtect] = useState('');
+  
+
+  
+const protectData= async (email) => {
+  const protectedData = await dataProtector.protectData({
+    data: {
+        email: email
+    }
+  });
+
+}
 
   let state = null;
   
   
-  const createAgent = async (aleoWorker, private_agents) => {
+  const createAgent = async (aleoWorker) => {
     const pk = await aleoWorker.createPrivateKey();
     console.log(pk);
     const pks = await pk.to_string();
+    console.log(pks);
     const x = Math.floor(Math.random() * 64);
     const y = Math.floor(Math.random() * 64);
     const agent = new Agent(x, y, pks);
     console.log(agent);
   
-    const res = await aleoWorker.localProgramExecution(
-      private_agents,
+    const res = await aleoWorker.programExecution(
+      "private_agents2.aleo",
       "register",
       [x + "field", y + "field"],
       pks
@@ -66,10 +81,10 @@ const generateAgents = async () => {
   try {
     const agentPromises = [];
     for (let i = 0; i < agentsToCreate; i++) {
-      agentPromises.push(createAgent(aleoWorker, private_agents));
+      agentPromises.push(createAgent(aleoWorker));
     }
     const newAgents = await Promise.all(agentPromises);
-
+    console.log(newAgents);
     // Now you have all the newAgents created in parallel
     setAgents(agents => [...agents, ...newAgents]);
   } catch (error) {
@@ -90,8 +105,8 @@ const generateAgents = async () => {
     const sign = (await sKey.sign(addr)).to_string();
     console.log(sign);
 
-    const res = await aleoWorker.localProgramExecution(
-      private_agents,
+    const res = await aleoWorker.programExecution(
+      "private_agents2",
       "send_signal",
       [agent.registration, addr, radius + "field", sign, 4343 + "field" ],
       agent.key
@@ -106,7 +121,7 @@ const generateAgents = async () => {
   async function execute(account) {
     setExecuting(true);
     const result = await aleoWorker.localProgramExecution(
-      private_agents,
+      private_agents2,
       "send_signal",
       ["5u32", "5u32"],
     );
@@ -118,7 +133,7 @@ const generateAgents = async () => {
   async function deploy() {
     setDeploying(true);
     try {
-      const result = await aleoWorker.deployProgram(private_agents);
+      const result = await aleoWorker.deployProgram(private_agents2);
       console.log("Transaction:")
       console.log("https://explorer.hamp.app/transaction?id=" + result)
       alert("Transaction ID: " + result);
@@ -144,14 +159,15 @@ const generateAgents = async () => {
       <button onClick={generateAgents}>
         Generate Accounts
       </button>
-      <label> Radius: </label>
+      <label> Distance: </label>
       <input
         type="number"
         value={signalRadius}
         onChange={(e) => setSignalRadius(e.target.value)}
         placeholder="Enter signal radius"
       />
-
+      <label> Data to Protect: </label>
+      <input type="text" valule={dataToProtect} onChange={(e) => setDataToProtect(e.target.value)} />
 
       <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px' }}>
 

@@ -3,7 +3,7 @@ import { wrap } from "comlink";
 let singletonWorker = null;
 
 const AleoWorker = () => {
-    if (!singletonWorker) {
+    //if (!singletonWorker) {
         const worker = new Worker(new URL("worker.js", import.meta.url), {
             type: "module",
         });
@@ -13,8 +13,10 @@ const AleoWorker = () => {
         };
 
         singletonWorker = wrap(worker);
-    }
-    return singletonWorker;
+
+        return singletonWorker;
+   // }
+   // return singletonWorker;
 };
 
 export { AleoWorker };

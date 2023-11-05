@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.0",
+    "@iexec/dataprotector": "^0.3.0",
     "@web3inbox/core": "^0.0.22",
     "@web3inbox/widget-react": "^0.6.25",
     "comlink": "^4.4.1",
