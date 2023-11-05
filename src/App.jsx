@@ -4,7 +4,7 @@ import aleoLogo from "./assets/aleo.svg";
 import "./App.css";
 import CanvasGrid from "./CanvasGrid";
 import SignalsTable from "./SignalsTable";
-import private_agents_path from "../private_agents2/build/main.aleo?raw";
+import private_agents3_path from "../private_agents3/build/main.aleo?raw";
 import { AleoWorker } from "./workers/AleoWorker.js";
 import {
   Account, PrivateKey
@@ -64,12 +64,13 @@ const protectData= async (email) => {
     const agent = new Agent(x, y, pks);
     console.log(agent);
   
-    const res = await aleoWorker.programExecution(
-      "private_agents2.aleo",
+    const res = await aleoWorker.localProgramExecution(
+      private_agents3_path,
       "register",
       [x + "field", y + "field"],
       pks
     );
+    console.log(res);
     agent.registration = res[0];
     console.log(agent)
     return agent;
@@ -105,8 +106,8 @@ const generateAgents = async () => {
     const sign = (await sKey.sign(addr)).to_string();
     console.log(sign);
 
-    const res = await aleoWorker.programExecution(
-      "private_agents2",
+    const res = await aleoWorker.localProgramExecution(
+      private_agents3_path,
       "send_signal",
       [agent.registration, addr, radius + "field", sign, 4343 + "field" ],
       agent.key
@@ -121,7 +122,7 @@ const generateAgents = async () => {
   async function execute(account) {
     setExecuting(true);
     const result = await aleoWorker.localProgramExecution(
-      private_agents2,
+      private_agents32,
       "send_signal",
       ["5u32", "5u32"],
     );
@@ -133,7 +134,7 @@ const generateAgents = async () => {
   async function deploy() {
     setDeploying(true);
     try {
-      const result = await aleoWorker.deployProgram(private_agents2);
+      const result = await aleoWorker.deployProgram(private_agents32);
       console.log("Transaction:")
       console.log("https://explorer.hamp.app/transaction?id=" + result)
       alert("Transaction ID: " + result);
