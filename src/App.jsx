@@ -33,6 +33,7 @@ function App() {
   const [deploying, setDeploying] = useState(false);
   const [selectedAgentKey, setSelectedAgentKey] = useState('');
   const [signalRadius, setSignalRadius] = useState('');
+  const [agentsToCreate, setAgentsToCreate] = useState('32');
   const [agents, setAgents] = useState([]);
   const [signals, setSignals] = useState([]);
 
@@ -54,7 +55,7 @@ function App() {
       pks
     );
     agent.registration = res[0];
-  
+    console.log(agent)
     return agent;
   };
 
@@ -63,23 +64,29 @@ function App() {
 const generateAgents = async () => {
   try {
     const agentPromises = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < agentsToCreate; i++) {
       agentPromises.push(createAgent(aleoWorker, helloworld_program));
     }
     const newAgents = await Promise.all(agentPromises);
 
     // Now you have all the newAgents created in parallel
-    setAgents(newAgents);
+    setAgents(agents => [...agents, ...newAgents]);
   } catch (error) {
     console.error('An error occurred while creating agents:', error);
   }
 };
 
-  const sendSignal = (agent, radius) => {
+  const sendSignal = async (agent, radius) => {
 
     //log agent position 
-    console.log("Agent: " + agent + " is at position (" + agent.x + ", " + agent.y + ")")
+    console.log(agent);
 
+    const res = await aleoWorker.localProgramExecution(
+      helloworld_program,
+      "send_signal",
+      [agent.registration, radius + "field", 4343 + "u32"],
+      agent.key
+    );
 
     // Add a new signal to the signals array
     setSignals(signals => [...signals, { x: agent.x, y: agent.y, radius }]);
@@ -121,6 +128,12 @@ const generateAgents = async () => {
 
 
 
+      <input
+        type="number"
+        value={agentsToCreate}
+        onChange={(e) => setAgentsToCreate(e.target.value)}
+        placeholder="Enter signal distance"
+      />
 
       <button onClick={generateAgents}>
         Generate Accounts

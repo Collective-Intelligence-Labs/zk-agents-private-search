@@ -52,13 +52,16 @@ program private_agents.aleo {
             signal_encrypted: signal_encrypted,
             owner: self.caller
         };
-        return e then finalize(agent.identity, distance, signal_encrypted);
+        return e then finalize(agent.identity.x, agent.identity.y, distance, signal_encrypted);
     }
     
-    finalize send_signal(public id: Identity, public distance: field, public signal_encrypted: u32){
+    finalize send_signal(public x: field, public y: field, public distance: field, public signal_encrypted: u32){
         let signal: SignalState = SignalState {
              signal_encrypted: signal_encrypted,
-             identity: id,
+             identity: Identity {
+                 x: x,
+                 y: y,
+             },
              distance: distance,
         };
         let hash: field = BHP256::hash_to_field(signal);
@@ -89,6 +92,8 @@ program private_agents.aleo {
             owner: self.caller
         };
     }
+
+    
 
     //finalize read_signal(signal: u32, sender: address){
     //    Mapping::remove(signals, signal);

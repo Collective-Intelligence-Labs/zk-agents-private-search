@@ -10,19 +10,11 @@ import {
 import { expose, proxy } from "comlink";
 
 await initThreadPool();
-let privateKey = null;
-
-let account = null;
-
-async function setPrivateKey(key) {
-  privateKey = key;
- 
-}
 
 async function localProgramExecution(program, aleoFunction, inputs, privateKey) {
   const programManager = new ProgramManager();
 
-  account = new Account({
+  const account = new Account({
     privateKey: privateKey
   });
   programManager.setAccount(account);
@@ -52,7 +44,7 @@ async function deployProgram(program) {
 
   // Use existing account with funds
   const account = new Account({
-    privateKey: privateKey,
+    privateKey: "APrivateKey1zkpAXoVC8gAr6QYGDmC2G8s6b4BJbjXVfz19gLcyuLU2XK5",
   });
 
   const recordProvider = new NetworkRecordProvider(account, networkClient);
