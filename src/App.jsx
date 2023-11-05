@@ -2,7 +2,7 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import aleoLogo from "./assets/aleo.svg";
 import "./App.css";
-import CanvasGrid from "./CanvasGrid";  
+import CanvasGrid from "./CanvasGrid";
 import SignalsTable from "./SignalsTable";
 import helloworld_program from "../helloworld/build/main.aleo?raw";
 import { AleoWorker } from "./workers/AleoWorker.js";
@@ -20,7 +20,7 @@ function Agent(x, y, key) {
   //this.account = Account.fromPrivateKey(key);
 }
 
-function Signal(x, y, radius){
+function Signal(x, y, radius) {
   this.x = x;
   this.y = y;
   this.radius = radius;
@@ -34,7 +34,7 @@ function App() {
   const [signalRadius, setSignalRadius] = useState('');
   const [agents, setAgents] = useState([]);
   const [signals, setSignals] = useState([]);
-  
+
   let state = null;
 
   const generateAgents = async () => {
@@ -67,11 +67,11 @@ function App() {
       const agent = new Agent(x, y, pks);
       console.log(agent);
       agents.push(agent)
-     
+
       const res = await aleoWorker.localProgramExecution(
         helloworld_program,
         "register",
-        [state , agent.x + "u32", agent.y + "u32", address],
+        [state, agent.x + "field", agent.y + "field", address],
       );
       state = res[0]
     }
@@ -121,15 +121,15 @@ function App() {
 
 
 
-return (
+  return (
     <>
       {/* existing UI elements */}
-     
 
-      
+
+
 
       <button onClick={generateAgents}>
-            Generate Accounts
+        Generate Accounts
       </button>
       <label> Radius: </label>
       <input
@@ -140,45 +140,45 @@ return (
       />
 
 
-  <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px' }}>
 
 
-      <div>      <CanvasGrid agents={agents} signals={signals} /></div>
+        <div>      <CanvasGrid agents={agents} signals={signals} /></div>
 
-    {/* Table of Agents */}
-  <div>
-  {/* Input for signal radius */}
+        {/* Table of Agents */}
+        <div>
+          {/* Input for signal radius */}
 
-<table style={{ width: '100%', borderCollapse: 'collapse' }}>
-  <thead>
-    <tr>
-      <th style={{ padding: '2px', fontSize: '0.9em' }}>Position</th>
-      <th style={{ padding: '2px', fontSize: '0.9em' }}>Address</th>
-      <th style={{ padding: '2px', fontSize: '0.9em' }}>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {agents.map((agent, index) => (
-      <tr key={agent.key}>
-        <td style={{ padding: '0px', fontSize: '0.8em' }}>({agent.x}, {agent.y})</td>
-        <td style={{ padding: '0px', fontSize: '0.8em' }}>{agent.key}</td>
-        <td style={{ padding: '0px', fontSize: '0.8em', whiteSpace: 'nowrap' }}>
-        <button 
-          onClick={() => sendSignal(agent, signalRadius)}
-          style={{ padding: '0px 0px', fontSize: '0.8em', margin: '0 5px 0 0', display: 'inline-block' }}
-        >
-          Send
-        </button>
-      </td>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '2px', fontSize: '0.9em' }}>Position</th>
+                <th style={{ padding: '2px', fontSize: '0.9em' }}>Address</th>
+                <th style={{ padding: '2px', fontSize: '0.9em' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {agents.map((agent, index) => (
+                <tr key={agent.key}>
+                  <td style={{ padding: '0px', fontSize: '0.8em' }}>({agent.x}, {agent.y})</td>
+                  <td style={{ padding: '0px', fontSize: '0.8em' }}>{agent.key}</td>
+                  <td style={{ padding: '0px', fontSize: '0.8em', whiteSpace: 'nowrap' }}>
+                    <button
+                      onClick={() => sendSignal(agent, signalRadius)}
+                      style={{ padding: '0px 0px', fontSize: '0.8em', margin: '0 5px 0 0', display: 'inline-block' }}
+                    >
+                      Send
+                    </button>
+                  </td>
 
-      </tr>
-    ))}
-  </tbody>
-</table>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+        </div>
 
       </div>
-
-    </div>
       <SignalsTable signals={signals} />
 
     </>

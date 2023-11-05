@@ -1,21 +1,10 @@
 // The 'helloworld' program.
 program helloworld.aleo {
 
-    struct State {
-        agents_x: [u32; 32],
-        agents_y: [u32; 32],
-        owner_address: address
-        counter: u32
-    }
 
     struct Identity {
-        x: u32
-        y: u32
-    }
-
-    struct Agent {
-        identity: Identity,
-        addr: address,
+        x: field
+        y: field
     }
 
     record AgentRegistered {
@@ -23,117 +12,17 @@ program helloworld.aleo {
         owner: address
     }
 
-    struct GlobalState {
-        index: u128,
-        x: u32,
-        y: u32,
-        distance: u32,
-        hashed_encrypted_signal: u32,
-        reader_public_key: address,
-        
-        reader_x: u32,
-        reader_y: u32,
-
-        hashed_decryption_key: field,
-    }
-
     struct SignalState {
         signal_encrupted: u32,
-        x: u32,
-        y: u32,
+        identity: Identity,
         distance: u32,
-    }
-
-    mapping signals: field => SignalState;
-
-    mapping globalState: bool => GlobalState;
-
-    mapping agents: address => Agent;
-
-    // Returns a new board_state.
-    transition init(
-    ) -> State {
-        let default_array: [u32; 32] = [0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32,0u32];
-        
-        return State {
-            agents_x: default_array,
-            agents_y: default_array,
-            owner_address: self.signer,
-            counter: 0u32
-        } then finalize(0u32);
-    }
-
-    finalize init(counter: u32) {
-        let gs: GlobalState = GlobalState {
-            index: 0u128
-        };
-        Mapping::set(globalState, true,gs);
-    }
-
-    transition test_state(public state: GlobalState) {
-        let s: u128= 0u128;
-    }
-
-    function update_state_register(s: State, x: u32, y: u32, sender: address) -> State {
-        let xs: [u32; 32] = [s.agents_x[0u32],s.agents_x[1u32],s.agents_x[2u32],s.agents_x[3u32],s.agents_x[4u32],s.agents_x[5u32],s.agents_x[6u32],s.agents_x[7u32],s.agents_x[8u32],s.agents_x[9u32],s.agents_x[10u32],s.agents_x[11u32],s.agents_x[12u32],s.agents_x[13u32],s.agents_x[14u32],s.agents_x[15u32],s.agents_x[16u32],s.agents_x[17u32],s.agents_x[18u32],s.agents_x[19u32],s.agents_x[20u32],s.agents_x[21u32],s.agents_x[22u32],s.agents_x[23u32],s.agents_x[24u32],s.agents_x[25u32],s.agents_x[26u32],s.agents_x[27u32],s.agents_x[28u32],s.agents_x[29u32],s.agents_x[30u32],s.agents_x[31u32]];
-        let ys: [u32; 32] = [s.agents_y[0u32],s.agents_y[1u32],s.agents_y[2u32],s.agents_y[3u32],s.agents_y[4u32],s.agents_y[5u32],s.agents_y[6u32],s.agents_y[7u32],s.agents_y[8u32],s.agents_y[9u32],s.agents_y[10u32],s.agents_y[11u32],s.agents_y[12u32],s.agents_y[13u32],s.agents_y[14u32],s.agents_y[15u32],s.agents_y[16u32],s.agents_y[17u32],s.agents_y[18u32],s.agents_y[19u32],s.agents_y[20u32],s.agents_y[21u32],s.agents_y[22u32],s.agents_y[23u32],s.agents_y[24u32],s.agents_y[25u32],s.agents_y[26u32],s.agents_y[27u32],s.agents_y[28u32],s.agents_y[29u32],s.agents_y[30u32],s.agents_y[31u32]];
-        let new_counter: u32 = s.counter + 1u32;
-
-        return State {
-            agents_x: xs,
-            agents_y: ys,
-            owner_address: self.signer,
-            counter: new_counter
-        };
-    }
-    transition register(state: State, public x: u32, public y: u32, sender: address) -> (State, AgentRegistered) {
-        let e: AgentRegistered = AgentRegistered {
-            identity: Identity {
-                x: x,
-                y: y
-            },
-            owner: sender
-        };
-        let new_state:State = update_state_register(state, x, y, sender);
-        return (new_state, e);
     }
 
     record SignalSent {
-        signal_hash: u32,
-        radius: u32,
+        signal_encrypted: u32,
+        distance: u32,
         owner: address,
     }
-    
-    //Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
-    transition send_signal(public state: GlobalState, agent: AgentRegistered, public distance: u32, public signal_encrypted: u32 ) -> SignalSent{
-        
-        assert_eq(self.caller, agent.owner);
-        assert_eq(state.x, 0u32);
-        assert_eq(state.y, 0u32);
-
-
-        let e: SignalSent = SignalSent {
-            signal_hash: signal,
-            distance: distance,
-            signal_encrypted: signal_encrypted
-        };
-        return e then finalize(agent.identity.x, agent.identity.y, distance, signal_encrypted);
-    }
-    
-    finalize  send_signal(agent: AgentRegistered, distance: u32, signal_encrypted: u32){
-        let signal: SignalState = SignalState {
-             signal_encrupted: signal_encrypted,
-             x: agent.x,
-             y: agent.y,
-             distance: distance,
-        };
-
-        let hash: field = BHP256::hash_to_field(signal);
-        Mapping::set(signals, hash, signal);
-    }
-
-    //TODO:
-    //
 
     record SignalRead {
         signal: u32,
@@ -142,22 +31,69 @@ program helloworld.aleo {
         reader: address,
     }
 
+    mapping signals: field => SignalState;
+
+    transition register(public id: Identity) -> AgentRegistered {
+        let e: AgentRegistered = AgentRegistered {
+            identity: id,
+            owner: self.caller
+        };
+        return e;
+    }
+    
+    //Sends a signal (a data) to a specifc agents in the network that are within a certain radius of the sender, here it just stores it in the mapping and does not send it to the agent agents read it in the next transition
+    transition send_signal(agent: AgentRegistered, public distance: u32, public signal_encrypted: u32 ) -> SignalSent{
+        
+        assert_eq(self.caller, agent.owner);
+        let e: SignalSent = SignalSent {
+            distance: distance,
+            signal_encrypted: signal_encrypted,
+            owner: self.caller
+        };
+        return e then finalize(agent.identity, distance, signal_encrypted);
+    }
+    
+    finalize send_signal(public id: Identity, public distance: u32, public signal_encrypted: u32){
+        let signal: SignalState = SignalState {
+             signal_encrupted: signal_encrypted,
+             identity: id,
+             distance: distance,
+        };
+        let hash: field = BHP256::hash_to_field(signal);
+        Mapping::set(signals, hash, signal);
+    }
+
+    //TODO:
+    //
 
     //Allows to read signal if the sender is within the radius of the signal
-    transition read_signal(s: State, signal: u32, sender: address) -> (State, SignalRead) {
-        let e: SignalRead = SignalRead {
+    transition read_signal( public signal: SignalState, agent: AgentRegistered ) -> SignalRead {
+        //Assert the the reaader is within a distance
+
+        assert_neq(signal.identity,agent.identity);
+
+        let distance = calculate_distance(signal.identity, agent.identity)
+        assert(distance < signal.distance);
+        
+        return SignalRead {
             signal: signal,
-            radius: s.radius,
-            owner: s.owner,
-            reader: sender
-        };
-        return (s, e) then finalize(signal, sender);
+            distance: distance,
+            reader: self.caller;
+        }
     }
 
-    finalize read_signal(signal: u32, sender: address){
-        Mapping::remove(signals, signal);
+    //finalize read_signal(signal: u32, sender: address){
+    //    Mapping::remove(signals, signal);
+    //}
+    
+    function calculate_distance(public id1: Identity, public id2: Identity): field {
+        let field1:field = id2.x - id1.x;
+        let field2:field = id2.y - id1.y;
+        let distanceSquared:field = field1.square() + field2.square();
+        let distance:field = distanceSquared.square_root();
+        return distance;
     }
-
+    
 
     
 }
