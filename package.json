@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.0",
+    "@web3inbox/core": "^0.0.22",
+    "@web3inbox/widget-react": "^0.6.25",
     "comlink": "^4.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -20,7 +22,7 @@
   "devDependencies": {
     "@babel/core": "^7.17.2",
     "@babel/preset-env": "^7.16.11",
-    "@babel/preset-react": "^7.16.7",
+    "@babel/preset-react": "^7.22.15",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.4",

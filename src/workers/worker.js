@@ -11,11 +11,48 @@ import { expose, proxy } from "comlink";
 
 await initThreadPool();
 
+
+
+async function programExecution(program, aleoFunction, inputs, privateKey) {
+
+  const keyProvider = new AleoKeyProvider();
+  keyProvider.useCache(true);
+
+  // Create a record provider that will be used to find records and transaction data for Aleo programs
+  const networkClient = new AleoNetworkClient("https://vm.aleo.org/api");
+
+  // Use existing account with funds
+  const account = new Account({
+    privateKey: privateKey,
+  });
+
+  const recordProvider = new NetworkRecordProvider(account, networkClient);
+  const programManager = new ProgramManager(
+    "https://vm.aleo.org/api",
+    keyProvider,
+    recordProvider,
+  );
+
+  programManager.setAccount(account);
+  const s = await programManager.verifyProgram(program);
+  console.log(s);
+  const fee = 5000; // 1.9 Aleo credits
+  const executionResponse = await programManager.execute(
+    program,
+    aleoFunction,
+    inputs,
+    false
+  );
+  return executionResponse.getOutputs();
+}
+
+
 async function localProgramExecution(program, aleoFunction, inputs, privateKey) {
   const programManager = new ProgramManager();
 
+  // Create a temporary account for the execution of the program
   const account = new Account({
-    privateKey: privateKey
+    privateKey: privateKey,
   });
   programManager.setAccount(account);
 
@@ -27,8 +64,6 @@ async function localProgramExecution(program, aleoFunction, inputs, privateKey) 
   );
   return executionResponse.getOutputs();
 }
-
-
 
 async function createPrivateKey() {
   const key = new PrivateKey();
@@ -59,7 +94,7 @@ async function deployProgram(program) {
   programManager.setAccount(account);
 
   // Define a fee to pay to deploy the program
-  const fee = 1.9; // 1.9 Aleo credits
+  const fee = 5000; // 1.9 Aleo credits
 
   // Deploy the program to the Aleo network
   const tx_id = await programManager.deploy(program, fee);

@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState  } from "react";
 import reactLogo from "./assets/react.svg";
 import aleoLogo from "./assets/aleo.svg";
 import "./App.css";
 import CanvasGrid from "./CanvasGrid";
 import SignalsTable from "./SignalsTable";
-import helloworld_program from "../helloworld/build/main.aleo?raw";
+import private_agents from "../private_agents/build/main.aleo?raw";
 import { AleoWorker } from "./workers/AleoWorker.js";
-
 import {
-  Account
+  Account, PrivateKey
 } from "@aleohq/sdk";
+
 
 const aleoWorker = AleoWorker();
 
@@ -38,8 +38,9 @@ function App() {
   const [signals, setSignals] = useState([]);
 
   let state = null;
-
-  const createAgent = async (aleoWorker, helloworld_program) => {
+  
+  
+  const createAgent = async (aleoWorker, private_agents) => {
     const pk = await aleoWorker.createPrivateKey();
     console.log(pk);
     const pks = await pk.to_string();
@@ -49,7 +50,7 @@ function App() {
     console.log(agent);
   
     const res = await aleoWorker.localProgramExecution(
-      helloworld_program,
+      private_agents,
       "register",
       [x + "field", y + "field"],
       pks
@@ -65,7 +66,7 @@ const generateAgents = async () => {
   try {
     const agentPromises = [];
     for (let i = 0; i < agentsToCreate; i++) {
-      agentPromises.push(createAgent(aleoWorker, helloworld_program));
+      agentPromises.push(createAgent(aleoWorker, private_agents));
     }
     const newAgents = await Promise.all(agentPromises);
 
@@ -81,10 +82,18 @@ const generateAgents = async () => {
     //log agent position 
     console.log(agent);
 
+    //log agent key
+
+    const sKey = new PrivateKey();
+    console.log(sKey);
+    const addr = sKey.to_address().to_string();
+    const sign = (await sKey.sign(addr)).to_string();
+    console.log(sign);
+
     const res = await aleoWorker.localProgramExecution(
-      helloworld_program,
+      private_agents,
       "send_signal",
-      [agent.registration, radius + "field", 4343 + "u32"],
+      [agent.registration, addr, radius + "field", sign, 4343 + "field" ],
       agent.key
     );
 
@@ -97,7 +106,7 @@ const generateAgents = async () => {
   async function execute(account) {
     setExecuting(true);
     const result = await aleoWorker.localProgramExecution(
-      helloworld_program,
+      private_agents,
       "send_signal",
       ["5u32", "5u32"],
     );
@@ -109,7 +118,7 @@ const generateAgents = async () => {
   async function deploy() {
     setDeploying(true);
     try {
-      const result = await aleoWorker.deployProgram(helloworld_program);
+      const result = await aleoWorker.deployProgram(private_agents);
       console.log("Transaction:")
       console.log("https://explorer.hamp.app/transaction?id=" + result)
       alert("Transaction ID: " + result);
@@ -125,9 +134,6 @@ const generateAgents = async () => {
   return (
     <>
       {/* existing UI elements */}
-
-
-
       <input
         type="number"
         value={agentsToCreate}
