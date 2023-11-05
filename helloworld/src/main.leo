@@ -1,8 +1,6 @@
 // The 'helloworld' program.
 program helloworld.aleo {
 
-
-
     struct State {
         agents_x: [u32; 32],
         agents_y: [u32; 32],
@@ -37,7 +35,6 @@ program helloworld.aleo {
         reader_y: u32,
 
         hashed_decryption_key: field,
-
     }
 
     struct SignalState {
@@ -100,14 +97,6 @@ program helloworld.aleo {
         let new_state:State = update_state_register(state, x, y, sender);
         return (new_state, e);
     }
-
-    struct Signal {
-        signal: u32,
-        radius: u32,
-        sender: address
-    }
-
-    mapping signals: u32 => Signal;
 
     record SignalSent {
         signal_hash: u32,
